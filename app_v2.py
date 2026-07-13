@@ -223,7 +223,13 @@ st.markdown("""
         border: 1.5px solid var(--tf-border) !important;
         border-radius: 10px !important;
         background: var(--tf-card) !important;
+        color: var(--tf-text) !important;
     }
+    .stSelectbox > div > div * { color: var(--tf-text) !important; }
+    div[data-baseweb="popover"] li, div[data-baseweb="popover"] li * {
+        color: var(--tf-text) !important;
+    }
+    .stTabs [data-baseweb="tab"] * { color: inherit !important; }
     label p { font-size: 12px !important; color: var(--tf-text-soft) !important;
               font-weight: 600 !important; letter-spacing: .3px; }
 

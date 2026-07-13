@@ -2415,7 +2415,7 @@ with tab_control:
                     df_anat.columns = ['Corte', 'Reales', 'Esperadas', 'Dif',
                                        'Peso prom (kg)', 'Estado', 'Detalle'][:len(cols_avail)]
                     st.dataframe(
-                        df_anat.style.applymap(color_estado, subset=['Estado']),
+                        df_anat.style.map(color_estado, subset=['Estado']),
                         use_container_width=True, hide_index=True
                     )
 
@@ -2431,7 +2431,7 @@ with tab_control:
                                        'Peso prom (kg)', 'Peso eval', 'Estado'][:len(cols_avail)]
                     subset_cols = [c for c in ['Estado', 'Peso eval'] if c in df_porc.columns]
                     st.dataframe(
-                        df_porc.style.applymap(color_estado, subset=subset_cols),
+                        df_porc.style.map(color_estado, subset=subset_cols),
                         use_container_width=True, hide_index=True
                     )
 
@@ -2447,7 +2447,7 @@ with tab_control:
                                       'Peso prom (kg)', 'Peso eval', 'Estado'][:len(cols_avail)]
                     subset_cols = [c for c in ['Estado', 'Peso eval'] if c in df_fet.columns]
                     st.dataframe(
-                        df_fet.style.applymap(color_estado, subset=subset_cols),
+                        df_fet.style.map(color_estado, subset=subset_cols),
                         use_container_width=True, hide_index=True
                     )
 
@@ -2457,7 +2457,7 @@ with tab_control:
                     df_sr = df_sr[['grupo', 'piezas_esperadas', 'alerta']]
                     df_sr.columns = ['Corte', 'Esperadas', 'Estado']
                     st.dataframe(
-                        df_sr.style.applymap(color_estado, subset=['Estado']),
+                        df_sr.style.map(color_estado, subset=['Estado']),
                         use_container_width=True, hide_index=True
                     )
 
@@ -2728,7 +2728,7 @@ with tab_comprador:
             else: return 'background-color: #FCE4EC; color: #C62828; font-weight: bold'
 
         st.dataframe(
-            df_rank.style.applymap(color_puntaje, subset=['Puntaje']),
+            df_rank.style.map(color_puntaje, subset=['Puntaje']),
             use_container_width=True, hide_index=True
         )
 
@@ -3378,7 +3378,7 @@ with tab_pricing:
                     'Mocho': 'background-color: #E8F5E9',
                 }.get(val, '')
             st.dataframe(
-                df_show.style.applymap(color_cuarto, subset=['Cuarto']),
+                df_show.style.map(color_cuarto, subset=['Cuarto']),
                 use_container_width=True, hide_index=True
             )
 
@@ -4701,7 +4701,7 @@ with tab_historial:
                     else: return 'background-color: #FCE4EC; color: #C62828'
 
                 st.dataframe(
-                    cats_display.style.applymap(color_desvio, subset=['Desvío %']),
+                    cats_display.style.map(color_desvio, subset=['Desvío %']),
                     use_container_width=True
                 )
 

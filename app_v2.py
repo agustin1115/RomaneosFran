@@ -1417,6 +1417,7 @@ with tab_upload:
         df_sel = pd.DataFrame([{
             'Incluir': not p.get('excluido', False),
             'Fecha': seg.resumen(p)['fecha'],
+            'Tropa': ', '.join(p.get('tropas', [])) or '—',
             'Categoría': p.get('categoria', '—'),
             'Medias': p.get('medias_reses', 0),
             'Kg': int(round(p.get('kg_entrada', 0) or 0)),
@@ -1435,6 +1436,7 @@ with tab_upload:
                 'Incluir': st.column_config.CheckboxColumn('✔', help='Incluir en el análisis'),
                 'Segmento': st.column_config.SelectboxColumn('Canal', options=seg.SEGMENTOS, required=True),
                 'Fecha': st.column_config.TextColumn('Fecha', disabled=True),
+                'Tropa': st.column_config.TextColumn('Tropa', disabled=True),
                 'Categoría': st.column_config.TextColumn('Categoría', disabled=True),
                 'Medias': st.column_config.NumberColumn('Medias', disabled=True),
                 'Kg': st.column_config.NumberColumn('Kg entrada', disabled=True),

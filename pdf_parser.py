@@ -224,6 +224,7 @@ def parse_romaneo_pdf(pdf_path):
         'cortes': [],
         'grasa_kg': 0,
         'merma_kg': 0,
+        'tropas': [],
     }
 
     # Detectar formato
@@ -276,6 +277,10 @@ def parse_romaneo_pdf(pdf_path):
         if in_entrada and 'Total >>>' in line:
             break
         if in_entrada:
+            # Tropa(s): número seguido de "- <lt>", ej "28002- 26"
+            for tr in re.findall(r'\b(\d{4,6})-\s*\d', line):
+                if tr not in result['tropas']:
+                    result['tropas'].append(tr)
             for tip_code in ['VA', 'NO', 'NT', 'VQ', 'TO', 'BU', 'BB']:
                 # Buscar tip code como palabra suelta en la línea
                 if re.search(rf'\b{tip_code}\b', line):

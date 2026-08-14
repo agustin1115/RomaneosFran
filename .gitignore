@@ -1,2 +1,6 @@
 secrets_PARA_PEGAR.toml
 credentials.json
+.streamlit/secrets.toml
+*.pyc
+__pycache__/
+.env

@@ -5079,8 +5079,23 @@ with tab_costos:
                                        value=1, min_value=0, step=1, key='costos_meses_stock')
 
         import diagnostico as _diag
+        import segmentacion as _seg
         _kg_carne = sum(_frig._kg_carne(_p) for _p in _incluidos)
         st.caption(f"Base del mes cargado: {len(_incluidos)} romaneos · {_kg_carne:,.0f} kg carne")
+
+        # Cabezas por categoría del acumulado (Vaca / Novillo / Vaquillona / Toro / ...)
+        _cab = _seg.cabezas_por_categoria(_incluidos)
+        if _cab:
+            with st.expander("🐄 Cabezas por categoría (acumulado)", expanded=True):
+                st.dataframe(pd.DataFrame([{
+                    'Categoría': cat, 'Cabezas': f"{d['cabezas']:,.0f}",
+                    'Medias': f"{d['medias']:,.0f}", 'Kg entrada': f"{d['kg']:,.0f}",
+                    '% del kg': f"{d['pct_kg']:.0f}%",
+                } for cat, d in _cab.items()]), hide_index=True, use_container_width=True)
+                if 'Toro' in _cab:
+                    st.warning(f"🐂 Toros en el acumulado: {_cab['Toro']['cabezas']:,.0f} cabezas · "
+                               f"{_cab['Toro']['kg']:,.0f} kg ({_cab['Toro']['pct_kg']:.0f}% del total). "
+                               "Se meten para más picada — vigilá cómo rinden.")
 
         # ─── FRIGORÍFICO ───
         st.markdown("#### ❄️ Frigorífico — Proyectado vs Real ($/kg carne)")

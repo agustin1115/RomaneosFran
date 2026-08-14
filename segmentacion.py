@@ -14,7 +14,26 @@ import json
 import hashlib
 
 # Canales/segmentos de negocio (orden de aparición en los dropdowns)
-SEGMENTOS = ['Consumo', 'Vaca China 6', 'Vaca China 23', 'Novillo Hilton', 'Black', 'Búfalo']
+SEGMENTOS = ['Consumo', 'Vaca China 6', 'Vaca China 23', 'Novillo Hilton', 'Black', 'Búfalo',
+             'Producción Especial']
+
+
+def cabezas_por_categoria(parsed_list):
+    """Suma cabezas / medias / kg por categoría (Vaca, Novillo, Vaquillona, Toro,
+    Novillito, Bubalino) en el acumulado. Útil para trackear, p.ej., los toros
+    que se meten para hacer más carne picada."""
+    agg = {}
+    for p in parsed_list:
+        for cat, d in (p.get('desglose_categoria') or {}).items():
+            a = agg.setdefault(cat, {'cabezas': 0.0, 'medias': 0.0, 'kg': 0.0})
+            a['cabezas'] += d.get('cabezas', 0)
+            a['medias'] += d.get('medias', 0)
+            a['kg'] += d.get('kg', 0)
+    tot_kg = sum(a['kg'] for a in agg.values()) or 1
+    for a in agg.values():
+        a['pct_kg'] = a['kg'] / tot_kg * 100
+    # ordenar por kg desc
+    return dict(sorted(agg.items(), key=lambda x: -x[1]['kg']))
 
 
 def _kg_carne(p):

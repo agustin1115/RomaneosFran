@@ -270,6 +270,7 @@ def parse_romaneo_pdf(pdf_path):
     # Buscar tipificaciones en la sección de entrada (entre "Entrada" y primer "Total >>>")
     in_entrada = False
     tip_kg = {}
+    tip_medias = {}
     for line in lines:
         if 'Entrada Despostada' in line:
             in_entrada = True
@@ -284,30 +285,34 @@ def parse_romaneo_pdf(pdf_path):
             for tip_code in ['VA', 'NO', 'NT', 'VQ', 'TO', 'BU', 'BB']:
                 # Buscar tip code como palabra suelta en la línea
                 if re.search(rf'\b{tip_code}\b', line):
-                    # Extraer kg de esta línea de entrada
+                    # Extraer piezas (medias) y kg de esta línea de entrada
                     m_kg = re.search(r'(\d+)\s+([\d,.]+)\s*$', line)
                     if m_kg:
-                        kg_val = _parse_kg(m_kg.group(2))
-                        tip_kg[tip_code] = tip_kg.get(tip_code, 0) + kg_val
+                        tip_medias[tip_code] = tip_medias.get(tip_code, 0) + int(m_kg.group(1))
+                        tip_kg[tip_code] = tip_kg.get(tip_code, 0) + _parse_kg(m_kg.group(2))
 
     if tip_kg:
         main_tip = max(tip_kg, key=tip_kg.get)
         result['tipificacion'] = main_tip
         result['categoria'] = TIPIFICACION_MAP.get(main_tip, 'Vaca')
 
-        # Desglose por categoría (% de kg)
+        # Desglose por categoría (kg, medias, cabezas = medias/2)
         total_tip_kg = sum(tip_kg.values())
         result['desglose_categoria'] = {}
         for tip, kg in tip_kg.items():
             cat_name = TIPIFICACION_MAP.get(tip, tip)
+            med = tip_medias.get(tip, 0)
             pct = (kg / total_tip_kg * 100) if total_tip_kg > 0 else 0
             if cat_name in result['desglose_categoria']:
-                result['desglose_categoria'][cat_name]['kg'] += kg
-                result['desglose_categoria'][cat_name]['pct'] = (
-                    result['desglose_categoria'][cat_name]['kg'] / total_tip_kg * 100)
+                d = result['desglose_categoria'][cat_name]
+                d['kg'] += kg
+                d['medias'] += med
+                d['cabezas'] = d['medias'] / 2
+                d['pct'] = d['kg'] / total_tip_kg * 100
             else:
                 result['desglose_categoria'][cat_name] = {
-                    'kg': kg, 'pct': round(pct, 1), 'tip': tip
+                    'kg': kg, 'medias': med, 'cabezas': med / 2,
+                    'pct': round(pct, 1), 'tip': tip
                 }
 
         # Desglose por tipificación (D0, C1, C2, etc.) — buscar en líneas de entrada

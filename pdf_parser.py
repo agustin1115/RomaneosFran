@@ -225,7 +225,20 @@ def parse_romaneo_pdf(pdf_path):
         'grasa_kg': 0,
         'merma_kg': 0,
         'tropas': [],
+        'planta': '',
     }
+
+    # ── PLANTA DE DESPOSTE ──
+    # ICO = Industria Cárnica del Oeste (Roberto Koch, Moreno).
+    # Top Meat = planta de desposte para China (Delta Car / Top Meat).
+    _up = full_text.upper()
+    if any(k in _up for k in ('TOP MEAT', 'TOPMEAT', 'DELTACAR', 'DELTA CAR')):
+        result['planta'] = 'Top Meat'
+    elif any(k in _up for k in ('INDUSTRIA CARNICA DEL OESTE', 'CARNICA DEL OESTE',
+                                'ROBERTO KOCH')):
+        result['planta'] = 'ICO'
+    else:
+        result['planta'] = 'Otra'
 
     # Detectar formato
     es_resultado = 'Resultado Despostada' in full_text

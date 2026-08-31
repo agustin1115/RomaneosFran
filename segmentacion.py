@@ -40,6 +40,68 @@ def _kg_carne(p):
     return sum(c.get('kg', 0) for c in p.get('cortes', []) if c.get('grupo') != 'GRASA')
 
 
+def _fecha_dt(p):
+    """Devuelve datetime de la fecha del romaneo (dd/mm/yyyy) o None."""
+    import datetime
+    f = (p.get('fecha') or '').strip()
+    for fmt in ('%d/%m/%Y', '%d/%m/%y'):
+        try:
+            return datetime.datetime.strptime(f, fmt)
+        except Exception:
+            pass
+    return None
+
+
+def semana_de(p):
+    """Etiqueta de semana ISO del romaneo, p.ej. '2026-S34 (17–23 ago)'.
+    Sirve para agrupar/elegir por semana. Devuelve '(sin fecha)' si no parsea."""
+    import datetime
+    dt = _fecha_dt(p)
+    if not dt:
+        return '(sin fecha)'
+    iso = dt.isocalendar()  # (year, week, weekday)
+    lunes = dt - datetime.timedelta(days=dt.weekday())
+    domingo = lunes + datetime.timedelta(days=6)
+    meses = ['ene', 'feb', 'mar', 'abr', 'may', 'jun', 'jul', 'ago', 'sep', 'oct', 'nov', 'dic']
+    rango = f"{lunes.day} {meses[lunes.month-1]}–{domingo.day} {meses[domingo.month-1]}"
+    return f"{iso[0]}-S{iso[1]:02d} ({rango})"
+
+
+def semanas_disponibles(parsed_list):
+    """Lista ordenada (más reciente primero) de semanas presentes en los romaneos."""
+    vistas = {}
+    for p in parsed_list:
+        et = semana_de(p)
+        dt = _fecha_dt(p)
+        # clave de orden: usa la fecha mínima de la semana
+        vistas.setdefault(et, dt or __import__('datetime').datetime.min)
+    return [et for et, _ in sorted(vistas.items(), key=lambda x: x[1], reverse=True)]
+
+
+def rendimiento_por_planta(parsed_list):
+    """Agrupa entrada / carne / rinde por planta de desposte (ICO vs Top Meat).
+    Permite comparar el rendimiento de cada planta por separado."""
+    agg = {}
+    for p in parsed_list:
+        planta = p.get('planta') or 'Otra'
+        a = agg.setdefault(planta, {'romaneos': 0, 'medias': 0.0, 'cabezas': 0.0,
+                                    'kg_entrada': 0.0, 'kg_carne': 0.0, 'grasa_kg': 0.0,
+                                    'merma_kg': 0.0})
+        a['romaneos'] += 1
+        a['medias'] += p.get('medias_reses', 0) or 0
+        a['cabezas'] += (p.get('medias_reses', 0) or 0) / 2
+        a['kg_entrada'] += p.get('kg_entrada', 0) or 0
+        a['kg_carne'] += _kg_carne(p)
+        a['grasa_kg'] += p.get('grasa_kg', 0) or 0
+        a['merma_kg'] += p.get('merma_kg', 0) or 0
+    for a in agg.values():
+        ent = a['kg_entrada'] or 1
+        a['rinde_carne_pct'] = a['kg_carne'] / ent * 100
+        a['grasa_pct'] = a['grasa_kg'] / ent * 100
+        a['merma_pct'] = a['merma_kg'] / ent * 100
+    return dict(sorted(agg.items(), key=lambda x: -x[1]['kg_entrada']))
+
+
 def grupos_distintos(p):
     """Cortes distintos (sin grasa ni sin-clasificar) — clave para distinguir
     un romaneo de consumo (30-45 cortes) de uno de China (6 o ~23)."""

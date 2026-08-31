@@ -1417,6 +1417,7 @@ with tab_upload:
         df_sel = pd.DataFrame([{
             'Incluir': not p.get('excluido', False),
             'Fecha': seg.resumen(p)['fecha'],
+            'Planta': p.get('planta', '—'),
             'Tropa': ', '.join(p.get('tropas', [])) or '—',
             'Categoría': p.get('categoria', '—'),
             'Medias': p.get('medias_reses', 0),
@@ -1436,6 +1437,7 @@ with tab_upload:
                 'Incluir': st.column_config.CheckboxColumn('✔', help='Incluir en el análisis'),
                 'Segmento': st.column_config.SelectboxColumn('Canal', options=seg.SEGMENTOS, required=True),
                 'Fecha': st.column_config.TextColumn('Fecha', disabled=True),
+                'Planta': st.column_config.TextColumn('Planta', disabled=True),
                 'Tropa': st.column_config.TextColumn('Tropa', disabled=True),
                 'Categoría': st.column_config.TextColumn('Categoría', disabled=True),
                 'Medias': st.column_config.NumberColumn('Medias', disabled=True),
@@ -1943,6 +1945,30 @@ with tab_analisis:
                 valid_files = [p for p in valid_files if p.get('archivo') in sel_archivos]
 
             st.markdown(f"**{len(valid_files)}** archivo(s) seleccionado(s) de {len(all_valid)} totales.")
+
+            # ── Rendimiento por planta (ICO vs Top Meat) sobre lo filtrado ──
+            if valid_files:
+                _plantas = seg.rendimiento_por_planta(valid_files)
+                if len(_plantas) > 1 or (_plantas and 'Otra' not in _plantas):
+                    with st.expander("🏭 Rendimiento por planta de desposte", expanded=len(_plantas) > 1):
+                        st.caption("Separa el rinde según dónde se despostó (ICO = Industria Cárnica "
+                                   "del Oeste · Top Meat = China). Filtrá arriba por semana para comparar.")
+                        st.dataframe(pd.DataFrame([{
+                            'Planta': pl,
+                            'Romaneos': d['romaneos'],
+                            'Medias': f"{d['medias']:,.0f}",
+                            'Kg entrada': f"{d['kg_entrada']:,.0f}",
+                            'Kg carne': f"{d['kg_carne']:,.0f}",
+                            'Rinde carne': f"{d['rinde_carne_pct']:.1f}%",
+                            'Grasa': f"{d['grasa_pct']:.1f}%",
+                            'Merma': f"{d['merma_pct']:.1f}%",
+                        } for pl, d in _plantas.items()]), hide_index=True, use_container_width=True)
+                        if len(_plantas) > 1:
+                            _mejor = max(_plantas.items(), key=lambda x: x[1]['rinde_carne_pct'])
+                            _peor = min(_plantas.items(), key=lambda x: x[1]['rinde_carne_pct'])
+                            _dif = _mejor[1]['rinde_carne_pct'] - _peor[1]['rinde_carne_pct']
+                            st.caption(f"↔️ Diferencia de rinde: **{_mejor[0]}** rinde {_dif:.1f} pts más "
+                                       f"que **{_peor[0]}** en lo filtrado.")
 
             if len(valid_files) == 0:
                 st.warning("No hay archivos en el filtro seleccionado.")
